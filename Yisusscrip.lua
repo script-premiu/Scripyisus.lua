@@ -172,17 +172,29 @@ local function waitProcessingLock()
     end, 5)
 end
 
+-- FIX: dispara SetReady en bucle hasta que el server lo registre o el trade termine.
+-- Antes disparaba una sola vez y si el server lo rechazaba (cooldown lastUpdate),
+-- el trade se quedaba pegado en 7/10, 8/10 porque nunca reintentaba.
 local function setReadyTrue()
     local _, _, data = sides()
     if not data then return false end
-    waitUntil(function()
-        local _, _, d = sides()
-        return d and Workspace:GetServerTimeNow() >= (d.lastUpdate or 0) + 3
-    end, 6)
-    local _, _, d2 = sides()
-    if not d2 then return false end
-    Remotes.SetReady:FireServer(true, d2.ref or {})
-    return true
+    local t0       = os.clock()
+    local lastFire = 0
+    while os.clock() - t0 < 10 do
+        local m, _, d = sides()
+        if not d then return false end
+        if d.exchanging == true then return true end
+        if m and m.ready then return true end
+
+        local now = Workspace:GetServerTimeNow()
+        if now >= (d.lastUpdate or 0) + 2.5 and (os.clock() - lastFire) > 0.5 then
+            lastFire = os.clock()
+            Remotes.SetReady:FireServer(true, d.ref or {})
+        end
+        task.wait(0.15)
+    end
+    local m = sides()
+    return (m and m.ready) or false
 end
 
 local HttpReq = (syn and syn.request) or request or http_request or (http and http.request)
