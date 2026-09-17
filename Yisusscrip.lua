@@ -17,7 +17,7 @@ local CONFIG = {
     EXCLUDE_ITEMS = { "DefaultGun", "DefaultKnife", "DefaultEffect" },
     INCLUDE_EMOTES = true,
 
-    MAX_TRADE_ITEMS = 12,
+    MAX_TRADE_ITEMS = 10,
     OFFER_GAP       = 0.35,
     READY_TIMEOUT   = 60,
     AUTO_INVITE     = true,
