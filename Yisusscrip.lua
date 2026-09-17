@@ -172,9 +172,9 @@ local function waitProcessingLock()
     end, 5)
 end
 
--- FIX: dispara SetReady en bucle hasta que el server lo registre o el trade termine.
+-- FIX 1: dispara SetReady en bucle hasta que el server lo registre o el trade termine.
 -- Antes disparaba una sola vez y si el server lo rechazaba (cooldown lastUpdate),
--- el trade se quedaba pegado en 7/10, 8/10 porque nunca reintentaba.
+-- el trade se quedaba pegado.
 local function setReadyTrue()
     local _, _, data = sides()
     if not data then return false end
@@ -325,10 +325,10 @@ local function handleTrade(other)
                 task.wait(CONFIG.OFFER_GAP)
             end
             task.wait(0.5)
-            local _, nowCount = offeredGuids()
-            if nowCount < math.min(CONFIG.MAX_TRADE_ITEMS, offeredCount + #batch) then
-                return "retry"
-            end
+            -- FIX 2: se eliminó el `if nowCount < ... then return "retry" end`.
+            -- Ese return impedía llegar a setReadyTrue() cuando el campo no
+            -- quedaba lleno (server rechazaba un item, o inventario tenía menos
+            -- de 12). Ahora, aunque el conteo quede corto, seguimos a ready.
         end
     end
 
